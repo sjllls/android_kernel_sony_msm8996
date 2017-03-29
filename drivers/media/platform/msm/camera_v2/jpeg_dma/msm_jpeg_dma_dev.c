@@ -479,7 +479,6 @@ static int msm_jpegdma_open(struct file *file)
 	if (!ctx)
 		return -ENOMEM;
 
-	mutex_init(&ctx->lock);
 	ctx->jdma_device = device;
 	dev_dbg(ctx->jdma_device->dev, "Jpeg v4l2 dma open\n");
 	/* Set ctx defaults */
@@ -758,9 +757,7 @@ static int msm_jpegdma_reqbufs(struct file *file,
 {
 	int ret = 0;
 	struct jpegdma_ctx *ctx = msm_jpegdma_ctx_from_fh(fh);
-	mutex_lock(&ctx->lock);
 	ret = v4l2_m2m_reqbufs(file, ctx->m2m_ctx, req);
-	mutex_unlock(&ctx->lock);
 	return ret;
 }
 
@@ -776,13 +773,9 @@ static int msm_jpegdma_qbuf(struct file *file, void *fh,
 	struct jpegdma_ctx *ctx = msm_jpegdma_ctx_from_fh(fh);
 	int ret;
 
-	mutex_lock(&ctx->lock);
-
 	ret = v4l2_m2m_qbuf(file, ctx->m2m_ctx, buf);
 	if (ret < 0)
 		dev_err(ctx->jdma_device->dev, "QBuf fail\n");
-
-	mutex_unlock(&ctx->lock);
 
 	return ret;
 }
@@ -816,13 +809,9 @@ static int msm_jpegdma_streamon(struct file *file,
 	if (!msm_jpegdma_config_ok(ctx))
 		return -EINVAL;
 
-	mutex_lock(&ctx->lock);
-
 	ret = v4l2_m2m_streamon(file, ctx->m2m_ctx, buf_type);
 	if (ret < 0)
 		dev_err(ctx->jdma_device->dev, "Stream on fail\n");
-
-	mutex_unlock(&ctx->lock);
 
 	return ret;
 }
@@ -838,11 +827,9 @@ static int msm_jpegdma_streamoff(struct file *file,
 {
 	struct jpegdma_ctx *ctx = msm_jpegdma_ctx_from_fh(fh);
 	int ret;
-	mutex_lock(&ctx->lock);
 	ret = v4l2_m2m_streamoff(file, ctx->m2m_ctx, buf_type);
 	if (ret < 0)
 		dev_err(ctx->jdma_device->dev, "Stream off fails\n");
-	mutex_unlock(&ctx->lock);
 	return ret;
 }
 
@@ -954,13 +941,9 @@ static int msm_jpegdma_s_crop(struct file *file, void *fh,
 	if (crop->c.top % formats[ctx->format_idx].v_align)
 		return -EINVAL;
 
-	mutex_lock(&ctx->lock);
-
 	ctx->crop = crop->c;
 	if (atomic_read(&ctx->active))
 		ret = msm_jpegdma_update_hw_config(ctx);
-
-	mutex_unlock(&ctx->lock);
 
 	return ret;
 }
@@ -1140,14 +1123,12 @@ void msm_jpegdma_isr_processing_done(struct msm_jpegdma_device *dma)
 	mutex_lock(&dma->lock);
 	ctx = v4l2_m2m_get_curr_priv(dma->m2m_dev);
 	if (ctx) {
-		mutex_lock(&ctx->lock);
 		ctx->plane_idx++;
 		if (ctx->plane_idx >= formats[ctx->format_idx].num_planes) {
 			src_buf = v4l2_m2m_src_buf_remove(ctx->m2m_ctx);
 			dst_buf = v4l2_m2m_dst_buf_remove(ctx->m2m_ctx);
 			if (src_buf == NULL || dst_buf == NULL) {
 				dev_err(ctx->jdma_device->dev, "Error, buffer list empty\n");
-				mutex_unlock(&ctx->lock);
 				mutex_unlock(&dma->lock);
 				return;
 			}
@@ -1163,13 +1144,11 @@ void msm_jpegdma_isr_processing_done(struct msm_jpegdma_device *dma)
 			src_buf = v4l2_m2m_next_src_buf(ctx->m2m_ctx);
 			if (src_buf == NULL || dst_buf == NULL) {
 				dev_err(ctx->jdma_device->dev, "Error, buffer list empty\n");
-				mutex_unlock(&ctx->lock);
 				mutex_unlock(&dma->lock);
 				return;
 			}
 			msm_jpegdma_process_buffers(ctx, src_buf, dst_buf);
 		}
-		mutex_unlock(&ctx->lock);
 	}
 	mutex_unlock(&dma->lock);
 }
