@@ -2402,6 +2402,8 @@ int msm_vfe47_get_clks(struct vfe_device *vfe_dev)
 	if (rc)
 		return rc;
 
+	vfe_dev->num_norm_clk = vfe_dev->num_clk;
+
 	for (i = 0; i < vfe_dev->num_clk; i++) {
 		if (0 == strcmp(vfe_dev->vfe_clk_info[i].clk_name,
 					"vfe_clk_src"))
