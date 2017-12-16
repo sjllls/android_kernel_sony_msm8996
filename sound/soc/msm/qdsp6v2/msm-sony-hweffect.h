@@ -25,7 +25,10 @@
 
 int msm_sony_hweffect_sonybundle_handler(struct audio_client *ac,
 				     struct sonybundle_params *sb,
-				     long *values);
+				     long *values,
+				     uint32_t sampling_rate,
+				     uint16_t bits_per_sample,
+				     uint16_t num_channels);
 
 void init_sonybundle_params(struct sonybundle_params *sb);
 

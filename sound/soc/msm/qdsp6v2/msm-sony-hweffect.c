@@ -21,6 +21,85 @@
 #include "msm-sony-hweffect.h"
 #include "sound/sony-hweffect-params.h"
 
+#define MAX_SUPPORTED_SAMPLERATE    48000
+#define MAX_SUPPORTED_BITWIDTH      16
+#define MAX_SUPPORTED_CHANNEL_COUNT 2
+
+struct mfc_output_media_fmt {
+	uint32_t sampling_rate;
+	uint16_t bits_per_sample;
+	uint16_t num_channels;
+	uint16_t channel_type[8];
+} __packed;
+
+static void set_mfc_output_format(struct mfc_output_media_fmt *mfc_params,
+				uint32_t sampling_rate,
+				uint16_t bits_per_sample,
+				uint16_t num_channels)
+{
+	mfc_params->sampling_rate = sampling_rate;
+	mfc_params->bits_per_sample = bits_per_sample;
+	mfc_params->num_channels = num_channels;
+	if (num_channels == 1) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FC;
+	} else if (num_channels == 2) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+	} else if (num_channels == 3) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_FC;
+	} else if (num_channels == 4) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_LS;
+		mfc_params->channel_type[3] = PCM_CHANNEL_RS;
+	} else if (num_channels == 5) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_FC;
+		mfc_params->channel_type[3] = PCM_CHANNEL_LS;
+		mfc_params->channel_type[4] = PCM_CHANNEL_RS;
+	} else if (num_channels == 6) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_LFE;
+		mfc_params->channel_type[3] = PCM_CHANNEL_FC;
+		mfc_params->channel_type[4] = PCM_CHANNEL_LS;
+		mfc_params->channel_type[5] = PCM_CHANNEL_RS;
+	} else if (num_channels == 7) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_FC;
+		mfc_params->channel_type[3] = PCM_CHANNEL_LFE;
+		mfc_params->channel_type[4] = PCM_CHANNEL_LB;
+		mfc_params->channel_type[5] = PCM_CHANNEL_RB;
+		mfc_params->channel_type[6] = PCM_CHANNEL_CS;
+	} else if (num_channels == 8) {
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+		mfc_params->channel_type[2] = PCM_CHANNEL_LFE;
+		mfc_params->channel_type[3] = PCM_CHANNEL_FC;
+		mfc_params->channel_type[4] = PCM_CHANNEL_LS;
+		mfc_params->channel_type[5] = PCM_CHANNEL_RS;
+		mfc_params->channel_type[6] = PCM_CHANNEL_LB;
+		mfc_params->channel_type[7] = PCM_CHANNEL_RB;
+	} else {
+		pr_err("%s: invalid num_channels %d\n", __func__,
+			num_channels);
+		/* Fallback for unexpected channels. */
+		mfc_params->num_channels = 2;
+		mfc_params->channel_type[0] = PCM_CHANNEL_FL;
+		mfc_params->channel_type[1] = PCM_CHANNEL_FR;
+	}
+
+	pr_debug("%s: sampling_rate:%d, bits_per_sample:%d, num_channels:%d\n",
+			__func__, mfc_params->sampling_rate,
+			mfc_params->bits_per_sample, mfc_params->num_channels);
+
+	return;
+}
+
 /*
  * Value array (max size:128)
  * +---------------+---------------------------+
@@ -57,7 +136,10 @@
 
 int msm_sony_hweffect_sonybundle_handler(struct audio_client *ac,
 				struct sonybundle_params *sb,
-				long *values)
+				long *values,
+				uint32_t sampling_rate,
+				uint16_t bits_per_sample,
+				uint16_t num_channels)
 {
 	int devices = *values++;
 	int num_commands = *values++;
@@ -367,6 +449,38 @@ int msm_sony_hweffect_sonybundle_handler(struct audio_client *ac,
 					}
 					sb->xloud_tuning_update = true;
 				}
+			}
+			break;
+
+		case DOWN_CONVERT:
+			if (length != 1 || index_offset != 0) {
+				pr_err("DOWN_CONVERT:invalid params\n");
+				rc = -EINVAL;
+				goto invalid_config;
+			}
+			sb->down_convert_enable = *values++;
+			pr_debug("%s:DOWN_CONVERT state:%d\n", __func__,
+				sb->down_convert_enable);
+			if (command_config_state == CONFIG_SET) {
+				struct mfc_output_media_fmt *mfc_params =
+					(struct mfc_output_media_fmt *)effect;
+
+				module_id = AUDPROC_MODULE_ID_MFC;
+				param_id = AUDPROC_PARAM_ID_MFC_OUTPUT_MEDIA_FORMAT;
+				if (sb->down_convert_enable == 1) {
+					/* Convert to supported format. */
+					set_mfc_output_format(mfc_params,
+							MAX_SUPPORTED_SAMPLERATE,
+							MAX_SUPPORTED_BITWIDTH,
+							MAX_SUPPORTED_CHANNEL_COUNT);
+				} else {
+					/* Specify same as input stream to disable down-convert. */
+					set_mfc_output_format(mfc_params,
+							sampling_rate,
+							bits_per_sample,
+							num_channels);
+				}
+				p_length += sizeof(struct mfc_output_media_fmt);
 			}
 			break;
 

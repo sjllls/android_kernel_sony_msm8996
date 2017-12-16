@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -293,6 +293,8 @@ struct hfi_buffer_info {
 	(HFI_PROPERTY_PARAM_VDEC_COMMON_START + 0x007)
 #define  HFI_PROPERTY_PARAM_VDEC_PIC_STRUCT				\
 	(HFI_PROPERTY_PARAM_VDEC_COMMON_START + 0x009)
+#define  HFI_PROPERTY_PARAM_VDEC_COLOUR_SPACE				\
+	(HFI_PROPERTY_PARAM_VDEC_COMMON_START + 0x00A)
 
 
 #define HFI_PROPERTY_CONFIG_VDEC_COMMON_START				\
@@ -338,7 +340,7 @@ struct hfi_buffer_info {
 	(HFI_PROPERTY_PARAM_VENC_COMMON_START + 0x014)
 #define  HFI_PROPERTY_PARAM_VENC_H264_PPS_ID               \
 	(HFI_PROPERTY_PARAM_VENC_COMMON_START + 0x015)
-#define HFI_PROPERTY_PARAM_VENC_H264_GENERATE_AUDNAL	\
+#define HFI_PROPERTY_PARAM_VENC_GENERATE_AUDNAL	\
 	(HFI_PROPERTY_PARAM_VENC_COMMON_START + 0x016)
 #define HFI_PROPERTY_PARAM_VENC_ASPECT_RATIO			\
 	(HFI_PROPERTY_PARAM_VENC_COMMON_START + 0x017)
@@ -435,6 +437,10 @@ struct hfi_pic_struct {
 struct hfi_bitrate {
 	u32 bit_rate;
 	u32 layer_id;
+};
+
+struct hfi_colour_space {
+	u32 colour_space;
 };
 
 #define HFI_CAPABILITY_FRAME_WIDTH			(HFI_COMMON_BASE + 0x1)

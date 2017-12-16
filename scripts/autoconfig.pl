@@ -21,6 +21,7 @@ my $defconfig;
 my $kernel_dir;
 my $config_dir;
 my @products = ();
+my $keep_tempconfig;
 
 # Print usage instructions
 #
@@ -38,9 +39,13 @@ sub usage($)
 	print "tool.\n\n";
 
 	print "Usage: ";
-	print "autoconfig.pl -t <action>[:<key>[=<value>]] <products>\n\n";
+	print "autoconfig.pl [-k] -t <action>[:<key>[=<value>]] <products>\n\n";
 
-	print "\tall of the following platforms are set as default\n";
+	print "-k: keep .config file after execution\n";
+	print "\t.config file is removed as default behavior\n";
+	print "\tbecause remaining .config file causes build error\n";
+	print "\tuse this flag to stop removing (for debug purpose)\n";
+	print "-t: task for new configuration\n";
 	print "<action> - action to perform\n";
 	print "\ts: sync defconfig with Kconfig (s)\n";
 	print "\ta: set a configuration (a:<key>=<value>)\n";
@@ -242,6 +247,7 @@ $kernel_dir = abs_path($0);
 $kernel_dir =~ s!/scripts/.*\.pl!!;
 chdir $kernel_dir or die "couldn't move to kernel directory, $kernel_dir\n";
 $config_dir = "$kernel_dir/arch/arm64/configs";
+$keep_tempconfig = 0;
 
 # Parse command line arguments
 my @tasks = ();
@@ -258,6 +264,8 @@ while ($iter < @ARGV) {
 	} elsif ($ARGV[$iter] eq "-h") {
 		usage("");
 		exit 0;
+	} elsif ($ARGV[$iter] eq "-k") {
+		$keep_tempconfig = 1;
 	} else {
 		push @products, $ARGV[$iter];
 	}
@@ -274,4 +282,7 @@ foreach $task (@tasks) {
 	my ($action, $key, $value) = parse_task_description($task);
 	next if ($action eq "-");
 	perform_task_defconfig($action, $key, $value);
+	if ($keep_tempconfig == 0) {
+		system "make mrproper";
+	}
 }

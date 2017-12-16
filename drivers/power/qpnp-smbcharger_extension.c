@@ -7,7 +7,7 @@
  * of the License, or (at your option) any later version.
  */
 /*
- * Copyright (C) 2015 Sony Mobile Communications Inc.
+ * Copyright (C) 2017 Sony Mobile Communications Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2, as
@@ -1256,8 +1256,8 @@ static void somc_chg_input_current_worker_start(struct smbchg_chip *chip)
 
 static void somc_chg_input_current_state(struct work_struct *work)
 {
-	int icl_voter = 0;
-	int fcc_voter = 0;
+	const char *icl_voter;
+	const char *fcc_voter;
 	int aicl_ma = 0;
 
 	struct smbchg_chip *chip = container_of(work,
@@ -1268,12 +1268,13 @@ static void somc_chg_input_current_state(struct work_struct *work)
 	if (!chip->usb_present)
 		return;
 
-	icl_voter = get_effective_client_id(chip->usb_icl_votable);
-	fcc_voter = get_effective_client_id(chip->fcc_votable);
+	icl_voter = get_effective_client(chip->usb_icl_votable);
+	fcc_voter = get_effective_client(chip->fcc_votable);
 
-	if (get_prop_charge_type(chip) == POWER_SUPPLY_CHARGE_TYPE_FAST &&
-					icl_voter == PSY_ICL_VOTER &&
-					fcc_voter == BATT_TYPE_FCC_VOTER) {
+	if (get_prop_charge_type(chip) ==
+				 POWER_SUPPLY_CHARGE_TYPE_FAST &&
+				!strcmp(icl_voter, PSY_ICL_VOTER) &&
+				!strcmp(fcc_voter, BATT_TYPE_FCC_VOTER)) {
 		aicl_ma = smbchg_get_aicl_level_ma(chip);
 		if (aicl_ma) {
 			params->input_current.input_current_cnt++;
@@ -1294,14 +1295,13 @@ static void somc_chg_input_current_state(struct work_struct *work)
 
 static ssize_t somc_chg_output_voter_param(struct smbchg_chip *chip,
 			char *buf, int buf_size,
-			struct votable *votable,
-			int max_id)
+			struct votable *votable)
 {
 	int i, size = 0;
 
-	for (i = 0; i < max_id; i++)
+	for (i = 0; i < len_fcc; i++)
 		size += scnprintf(buf + size, (buf_size - size),
-				"%d,", get_client_vote(votable, i));
+				"%d,", get_client_vote(votable, fcc_voters[i]));
 	size += scnprintf(buf + size, buf_size - size,
 			"%d", get_effective_result(votable));
 	return size;
@@ -1682,20 +1682,19 @@ static ssize_t somc_chg_param_show(struct device *dev,
 		break;
 	case ATTR_IBAT_VOTER:
 		size = somc_chg_output_voter_param(chip, buf, PAGE_SIZE,
-				chip->fcc_votable, NUM_FCC_VOTER);
+				chip->fcc_votable);
 		break;
 	case ATTR_USBIN_VOTER:
 		size = somc_chg_output_voter_param(chip, buf, PAGE_SIZE,
-				chip->usb_icl_votable, NUM_ICL_VOTER);
+				chip->usb_icl_votable);
 		break;
 	case ATTR_USB_VOTER:
 		size = somc_chg_output_voter_param(chip, buf, PAGE_SIZE,
-				chip->usb_suspend_votable, NUM_EN_VOTERS);
+				chip->usb_suspend_votable);
 		break;
 	case ATTR_BATTCHG_VOTER:
 		size = somc_chg_output_voter_param(chip, buf, PAGE_SIZE,
-				chip->battchg_suspend_votable,
-				NUM_BATTCHG_EN_VOTERS);
+				chip->battchg_suspend_votable);
 		break;
 	case ATTR_PULSE_CNT:
 		size = scnprintf(buf, PAGE_SIZE, "%d\n", chip->pulse_cnt);

@@ -88,11 +88,11 @@ struct sony_camera_data {
 	struct clk			*clk_handle[2];
 	struct device			info_dev;
 	bool				power_up_done;
+	uint32_t			sof_irq;
+	int				sof_gpio;
 	struct thermal_zone_device	*thermal_zone_dev;
 	int32_t				thermal_sensor_temp;
 	int				thermal_ret_val;
-	uint32_t			sof_irq;
-	int				sof_gpio;
 };
 
 struct camera_read_info {
@@ -2300,10 +2300,10 @@ static struct sony_camera_data camera_data[] = {
 					ARRAY_SIZE(sony_sensor_subdev_info),
 			.func_tbl = &sony_sensor_func_tbl,
 		},
-		.thermal_sensor_temp = 0,
-		.thermal_ret_val = -ENODEV,
 		.sof_irq = 0,
 		.sof_gpio = -1,
+		.thermal_sensor_temp = 0,
+		.thermal_ret_val = -ENODEV,
 	},
 	{
 		.s_ctrl = {
@@ -2318,10 +2318,10 @@ static struct sony_camera_data camera_data[] = {
 					ARRAY_SIZE(sony_sensor_subdev_info),
 			.func_tbl = &sony_sensor_func_tbl,
 		},
-		.thermal_sensor_temp = 0,
-		.thermal_ret_val = -ENODEV,
 		.sof_irq = 0,
 		.sof_gpio = -1,
+		.thermal_sensor_temp = 0,
+		.thermal_ret_val = -ENODEV,
 	},
 };
 

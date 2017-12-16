@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2015, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2015, 2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -287,7 +287,7 @@ static int debug_open(struct inode *inode, struct file *file)
 	}
 	buffer_size = DEBUG_BUF_SIZE;
 	debug_buffer = kzalloc(buffer_size, GFP_KERNEL);
-	if (debug_buffer == NULL){
+	if (debug_buffer == NULL) {
 		mutex_unlock(&dbg_buf_lock);
 		return -ENOMEM;
 	}

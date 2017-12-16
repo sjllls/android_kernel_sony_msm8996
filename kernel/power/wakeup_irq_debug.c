@@ -150,7 +150,7 @@ static int wakeup_irq_resume(struct device *dev)
 					desc->action && desc->action->name ?
 					desc->action->name : "");
 
-				log_wakeup_reason(i->irq);
+				//log_wakeup_reason(i->irq); O-preES1 removed its denpendency
 				update_irq_table(p, i->irq);
 			}
 		}

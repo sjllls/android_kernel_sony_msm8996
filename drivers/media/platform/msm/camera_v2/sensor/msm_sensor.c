@@ -29,6 +29,9 @@
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 
+static struct msm_camera_i2c_fn_t msm_sensor_cci_func_tbl;
+static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl;
+
 #if defined(CONFIG_SONY_CAM_V4L2)
 static struct v4l2_file_operations msm_sensor_v4l2_subdev_fops;
 #endif
@@ -483,6 +486,11 @@ int msm_sensor_power_down(struct msm_sensor_ctrl_t *s_ctrl)
 			__func__, __LINE__, power_info, sensor_i2c_client);
 		return -EINVAL;
 	}
+
+	/* Power down secure session if it exist*/
+	if (s_ctrl->is_secure)
+		msm_camera_tz_i2c_power_down(sensor_i2c_client);
+
 	return msm_camera_power_down(power_info, sensor_device_type,
 		sensor_i2c_client);
 }
@@ -521,7 +529,27 @@ int msm_sensor_power_up(struct msm_sensor_ctrl_t *s_ctrl)
 	if (s_ctrl->set_mclk_23880000)
 		msm_sensor_adjust_mclk(power_info);
 
+	CDBG("Sensor %d tagged as %s\n", s_ctrl->id,
+		(s_ctrl->is_secure)?"SECURE":"NON-SECURE");
+
 	for (retry = 0; retry < 3; retry++) {
+		if (s_ctrl->is_secure) {
+			rc = msm_camera_tz_i2c_power_up(sensor_i2c_client);
+			if (rc < 0) {
+#ifdef CONFIG_MSM_SEC_CCI_DEBUG
+				CDBG("Secure Sensor %d use cci\n", s_ctrl->id);
+				/* session is not secure */
+				s_ctrl->sensor_i2c_client->i2c_func_tbl =
+					&msm_sensor_cci_func_tbl;
+#else  /* CONFIG_MSM_SEC_CCI_DEBUG */
+				return rc;
+#endif /* CONFIG_MSM_SEC_CCI_DEBUG */
+			} else {
+				/* session is secure */
+				s_ctrl->sensor_i2c_client->i2c_func_tbl =
+					&msm_sensor_secure_func_tbl;
+			}
+		}
 		rc = msm_camera_power_up(power_info, s_ctrl->sensor_device_type,
 			sensor_i2c_client);
 		if (rc < 0)
@@ -2062,6 +2090,21 @@ int32_t msm_sensor_platform_probe(struct platform_device *pdev,
 }
 #endif
 
+static struct msm_camera_i2c_fn_t msm_sensor_secure_func_tbl = {
+	.i2c_read = msm_camera_tz_i2c_read,
+	.i2c_read_seq = msm_camera_tz_i2c_read_seq,
+	.i2c_write = msm_camera_tz_i2c_write,
+	.i2c_write_table = msm_camera_tz_i2c_write_table,
+	.i2c_write_seq_table = msm_camera_tz_i2c_write_seq_table,
+	.i2c_write_table_w_microdelay =
+		msm_camera_tz_i2c_write_table_w_microdelay,
+	.i2c_util = msm_sensor_tz_i2c_util,
+	.i2c_write_conf_tbl = msm_camera_tz_i2c_write_conf_tbl,
+	.i2c_write_table_async = msm_camera_tz_i2c_write_table_async,
+	.i2c_write_table_sync = msm_camera_tz_i2c_write_table_sync,
+	.i2c_write_table_sync_block = msm_camera_tz_i2c_write_table_sync_block,
+};
+
 int32_t msm_sensor_init_default_params(struct msm_sensor_ctrl_t *s_ctrl)
 {
 	struct msm_camera_cci_client *cci_client = NULL;
@@ -2094,6 +2137,9 @@ int32_t msm_sensor_init_default_params(struct msm_sensor_ctrl_t *s_ctrl)
 
 		/* Get CCI subdev */
 		cci_client->cci_subdev = msm_cci_get_subdev();
+
+		if (s_ctrl->is_secure)
+			msm_camera_tz_i2c_register_sensor((void *)s_ctrl);
 
 		/* Update CCI / I2C function table */
 		if (!s_ctrl->sensor_i2c_client->i2c_func_tbl)

@@ -1,7 +1,7 @@
 /*
  * MDSS MDP Interface (used by framebuffer core)
  *
- * Copyright (c) 2007-2016, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2007-2017, The Linux Foundation. All rights reserved.
  * Copyright (C) 2007 Google Incorporated
  *
  * This software is licensed under the terms of the GNU General Public
@@ -1595,7 +1595,12 @@ static int mdss_mdp_gdsc_notifier_call(struct notifier_block *self,
 	mdata = container_of(self, struct mdss_data_type, gdsc_cb);
 
 	if (event & REGULATOR_EVENT_ENABLE) {
-		__mdss_restore_sec_cfg(mdata);
+		/*
+		 * As SMMU in low tier targets is not power collapsible,
+		 * hence we don't need to restore sec configuration.
+		 */
+		if (!mdss_mdp_req_init_restore_cfg(mdata))
+			__mdss_restore_sec_cfg(mdata);
 	} else if (event & REGULATOR_EVENT_PRE_DISABLE) {
 		pr_debug("mdss gdsc is getting disabled\n");
 		/* halt the vbif transactions */
@@ -1796,6 +1801,7 @@ static void mdss_mdp_hw_rev_caps_init(struct mdss_data_type *mdata)
 		mdss_mdp_init_default_prefill_factors(mdata);
 		mdss_set_quirk(mdata, MDSS_QUIRK_DSC_RIGHT_ONLY_PU);
 		mdss_set_quirk(mdata, MDSS_QUIRK_DSC_2SLICE_PU_THRPUT);
+		mdss_set_quirk(mdata, MDSS_QUIRK_HDR_SUPPORT_ENABLED);
 		break;
 	case MDSS_MDP_HW_REV_105:
 	case MDSS_MDP_HW_REV_109:
@@ -2401,6 +2407,8 @@ ssize_t mdss_mdp_show_capabilities(struct device *dev,
 		SPRINT(" dest_scaler");
 	if (mdata->has_separate_rotator)
 		SPRINT(" separate_rotator");
+	if (mdss_has_quirk(mdata, MDSS_QUIRK_HDR_SUPPORT_ENABLED))
+		SPRINT(" hdr");
 	SPRINT("\n");
 #undef SPRINT
 
@@ -2722,9 +2730,13 @@ static int mdss_mdp_probe(struct platform_device *pdev)
 		MDSS_MDP_REG_DISP_INTF_SEL);
 	split_display = readl_relaxed(mdata->mdp_base +
 		MDSS_MDP_REG_SPLIT_DISPLAY_EN);
+	mdata->splash_intf_sel = intf_sel;
+	mdata->splash_split_disp = split_display;
+
 	if (intf_sel != 0) {
 		for (i = 0; i < 4; i++)
-			num_of_display_on += ((intf_sel >> i*8) & 0x000000FF);
+			if ((intf_sel >> i*8) & 0x000000FF)
+				num_of_display_on++;
 
 		/*
 		 * For split display enabled - DSI0, DSI1 interfaces are
@@ -2734,9 +2746,12 @@ static int mdss_mdp_probe(struct platform_device *pdev)
 		if (split_display)
 			num_of_display_on--;
 	}
-	if (!num_of_display_on)
+	if (!num_of_display_on) {
 		mdss_mdp_footswitch_ctrl_splash(false);
-	else {
+		msm_bus_scale_client_update_request(
+					mdata->bus_hdl, 0);
+		mdata->ao_bw_uc_idx = 0;
+	} else {
 		mdata->handoff_pending = true;
 		/*
 		 * If multiple displays are enabled in LK, ctrl_splash off will

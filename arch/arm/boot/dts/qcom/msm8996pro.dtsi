@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -8,6 +8,11 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
+ */
+/*
+ * NOTE: This file has been modified by Sony Mobile Communications Inc.
+ * Modifications are Copyright (c) 2016 Sony Mobile Communications Inc,
+ * and licensed under the license of the file.
  */
 
 /*
@@ -20,6 +25,10 @@
 / {
 	model = "Qualcomm Technologies, Inc. MSM 8996pro";
 	qcom,msm-id = <305 0x10000>;
+
+	chosen {
+		bootargs = "sched_enable_hmp=1 sched_enable_power_aware=1 app_setting.use_32bit_app_setting_pro=1";
+	};
 };
 
 &apc_apm {
@@ -178,7 +187,7 @@
 		<  20000    20000    20000    20000    20000 >,
 		<  20000    20000    20000    20000    20000 >,
 		<  20000    20000    20000    20000    20000 >,
-		<  20000    20000    20000    20000    20000 >;
+		<  20000    20000    20000    20000    20000 >,
 
 		/* Speed bin 2 */
 		<(-45000)       0        0  (-25000)       0 >,
@@ -209,7 +218,7 @@
 		<  20000     5000     5000   ( 5000)  ( 5000)>,
 		<  20000     5000     5000   ( 5000)  ( 5000)>,
 		<  20000     5000     5000   ( 5000)  ( 5000)>,
-		<  20000     5000     5000   ( 5000)  ( 5000)>;
+		<  20000     5000     5000   ( 5000)  ( 5000)>,
 
 		/* Speed bin 2 */
 		<(-55000) (-25000)  (-5000) (-20000) (-15000)>,
@@ -396,7 +405,7 @@
 		<  20000    20000    20000    35000    20000 >,
 		<  20000    20000    20000    35000    20000 >,
 		<  20000    20000    20000    35000    20000 >,
-		<  20000    20000    20000    35000    20000 >;
+		<  20000    20000    20000    35000    20000 >,
 
 		/* Speed bin 2 */
 		<(-40000)       0        0  (-10000) (-50000)>,
@@ -427,7 +436,7 @@
 		<   5000    10000    25000    40000    20000 >,
 		<   5000    10000    25000    40000    20000 >,
 		<   5000    10000    25000    40000    20000 >,
-		<   5000    10000    25000    40000    20000 >;
+		<   5000    10000    25000    40000    20000 >,
 
 		/* Speed bin 2 */
 		<(-45000) (-25000)   10000  (-10000) (-40000)>,
@@ -601,7 +610,7 @@
 		<  20000    20000    20000    20000    20000 >,
 		<  20000    20000    20000    20000    20000 >,
 		<  20000    20000    20000    20000    20000 >,
-		<  20000    20000    20000    20000    20000 >;
+		<  20000    20000    20000    20000    20000 >,
 
 		/* Speed bin 2 */
 		<(-45000)       0    15000  (-20000)       0 >,
@@ -632,7 +641,7 @@
 		<  20000    10000     5000    20000    10000 >,
 		<  20000    10000     5000    20000    10000 >,
 		<  20000    10000     5000    20000    10000 >,
-		<  20000    10000     5000    20000    10000 >;
+		<  20000    10000     5000    20000    10000 >,
 
 		/* Speed bin 2 */
 		<(-55000) (-20000)   15000  (-15000) (-10000)>,
@@ -1329,6 +1338,10 @@
 		qcom,poll-ms = <50>;
 		qcom,limit-temp = <80>;
 		qcom,core-limit-temp = <90>;
+		msm_thermal_freq: qcom,vdd-apps-rstr {
+			qcom,max-freq-level = <1209600>;
+			qcom,levels = <1056000 1516800 1516800>;
+		};
 		qcom,vdd-gfx-rstr{
 			qcom,levels = <6 8 9>; /* Nominal, Turbo, Turbo_L1 */
 		};

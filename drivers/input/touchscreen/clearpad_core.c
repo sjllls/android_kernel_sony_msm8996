@@ -725,6 +725,7 @@ struct clearpad_cover_t {
 	bool supported;
 	bool status;
 	bool enabled;
+	bool set_disp_size_to_win;
 	int win_top;
 	int win_bottom;
 	int win_right;
@@ -2005,6 +2006,16 @@ end:
 	if (rc)
 		LOGE(this, "failed to set cover window");
 	return rc;
+}
+
+/* need LOCK(&this->lock) */
+static void clearpad_set_cover_size(struct clearpad_cover_t *cover,
+		int width, int height)
+{
+	cover->win_left = 0;
+	cover->win_right = width;
+	cover->win_top = 0;
+	cover->win_bottom = height;
 }
 
 /*
@@ -4904,6 +4915,10 @@ static ssize_t clearpad_state_show(struct device *dev,
 								PAGE_SIZE))
 		snprintf(buf, PAGE_SIZE,
 			"%d", this->cover.win_left);
+	else if (!strncmp(attr->attr.name, __stringify(disp_size_to_cover_win),
+								PAGE_SIZE))
+		snprintf(buf, PAGE_SIZE,
+			"%d", this->cover.set_disp_size_to_win);
 	else if (!strncmp(attr->attr.name, __stringify(stamina_mode),
 								PAGE_SIZE))
 		snprintf(buf, PAGE_SIZE,
@@ -5705,6 +5720,67 @@ err_in_check_support:
 	return size;
 }
 
+static ssize_t clearpad_set_disp_size_to_cover_win_store(struct device *dev,
+		struct device_attribute *attr,
+		const char *buf, size_t size)
+{
+	int rc = 0;
+	bool is_disp_size_to_cover_win = !sysfs_streq(buf, "0");
+	struct clearpad_t *this = dev_get_drvdata(dev);
+	const char *session = "set_disp_size_to_cover_win";
+
+	if (!this->cover.supported) {
+		LOGI(this, "cover mode is not supported");
+		return size;
+	}
+
+	if (is_disp_size_to_cover_win) {
+		int width = this->extents.preset_x_max + 1;
+		int height = this->extents.preset_y_max + 1;
+
+		LOGI(this,
+			"set display resolution (%d, %d) to cover window size.",
+			width, height);
+
+		LOCK(&this->lock);
+		clearpad_set_cover_size(&this->cover, width, height);
+		this->cover.set_disp_size_to_win = true;
+	} else {
+		LOCK(&this->lock);
+		this->cover.set_disp_size_to_win = false;
+	}
+	UNLOCK(&this->lock);
+
+	if (!this->post_probe.done) {
+		LOGI(this, "post_probe hasn't finished, will apply later\n");
+		return size;
+	}
+
+	if (!this->dev_active || this->interrupt.count == 0) {
+		LOGI(this, "avoid to access I2C before waiting %d ms delay\n",
+			this->reset.delay_for_powerup_ms);
+		return size;
+	}
+
+	rc = clearpad_ctrl_session_begin(this, session);
+	if (rc) {
+		LOGI(this, "not powered, will be applied later\n");
+		return size;
+	}
+
+	LOCK(&this->lock);
+	if (this->cover.enabled)
+		rc = clearpad_set_cover_window(this);
+	UNLOCK(&this->lock);
+
+	if (rc)
+		LOGE(this, "failed to set cover window for device\n");
+
+	clearpad_ctrl_session_end(this, session);
+
+	return size;
+}
+
 static ssize_t clearpad_cover_win_store(struct device *dev,
 		struct device_attribute *attr,
 		const char *buf, size_t size)
@@ -5936,6 +6012,9 @@ static struct device_attribute clearpad_sysfs_attrs[] = {
 	__ATTR(cover_mode_enabled, S_IRUGO | S_IWUSR,
 				clearpad_state_show,
 				clearpad_cover_mode_enabled_store),
+	__ATTR(cover_win_set_disp_size, S_IRUGO | S_IWUSR,
+				clearpad_state_show,
+				clearpad_set_disp_size_to_cover_win_store),
 	__ATTR(cover_win_top, S_IRUGO | S_IWUSR,
 				clearpad_state_show,
 				clearpad_cover_win_store),
@@ -7957,10 +8036,12 @@ static void clearpad_debug_info(struct clearpad_t *this)
 	HWLOGI(this, "[glove] supported=%s enabled=%s\n",
 	       this->glove.supported ? "true" : "false",
 	       this->glove.enabled ? "true" : "false");
-	HWLOGI(this, "[cover] supported=%s status=%s enabled=%s\n",
+	HWLOGI(this, "[cover] supported=%s status=%s enabled=%s "
+		"set_disp_size_to_win=%s\n",
 	       this->cover.supported ? "true" : "false",
 	       this->cover.status ? "true" : "false",
-	       this->cover.enabled ? "true" : "false");
+	       this->cover.enabled ? "true" : "false",
+	       this->cover.set_disp_size_to_win ? "true" : "false");
 	HWLOGI(this, INDENT "win top=%d bottom=%d right=%d left=%d\n",
 	       this->cover.win_top, this->cover.win_bottom,
 	       this->cover.win_right, this->cover.win_left);
@@ -8989,6 +9070,7 @@ static void clearpad_thread_resume_work(struct work_struct *work)
 				struct clearpad_t, thread_resume);
 	struct timespec ts;
 	bool locked = false;
+	int rc;
 
 	get_monotonic_boottime(&ts);
 	LOCK(&this->lock);
@@ -9017,8 +9099,25 @@ static void clearpad_thread_resume_work(struct work_struct *work)
 	this->interrupt.count = 0;
 	if (clearpad_handle_if_first_event(this) < 0)
 		LOGE(this, "failed to handle first event\n");
+		/* Workaround for Kagura sharp panel id 9  & Maple*/
+	if (this->chip_id == SYN_CHIP_3500) {
+		switch (this->device_info.customer_family) {
+		case 0xd0:
+		case 0xd1:
+			HWLOGW(this, "Force Calibration for Maple\n");
+			rc = clearpad_put(
+				SYNF(this, F54_ANALOG, COMMAND,
+					this->reg_offset.f54_cmd00),
+				ANALOG_COMMAND_FORCE_CALIBRATION_MASK);
+			if (rc)
+				LOGE(this, "failed to force calibrate\n");
+			break;
+		default:
+			break;
+		}
+	}
 
-		touchctrl_unlock_power(this, "fb_unblank");
+	touchctrl_unlock_power(this, "fb_unblank");
 
 	get_monotonic_boottime(&ts);
 	HWLOGI(this, "end thread_resume @ %ld.%06ld\n",

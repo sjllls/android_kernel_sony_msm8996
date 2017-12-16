@@ -536,9 +536,9 @@ static bool fiq_debugger_fiq_exec(struct fiq_debugger_state *state,
 		fiq_debugger_uart_flush(state);
 		state->console_enable = true;
 	} else if (!strcmp(cmd, "cpu")) {
-		 if (sysrq_on())
+		if (sysrq_on())
 			fiq_debugger_printf(&state->output, "cpu %d\n",
-                                           state->current_cpu);
+					    state->current_cpu);
 	} else if (!strncmp(cmd, "cpu ", 4) && sysrq_on()) {
 		unsigned long cpu = 0;
 		if (kstrtoul(cmd + 4, 10, &cpu) == 0)
@@ -546,7 +546,7 @@ static bool fiq_debugger_fiq_exec(struct fiq_debugger_state *state,
 		else
 			fiq_debugger_printf(&state->output, "invalid cpu\n");
 		fiq_debugger_printf(&state->output, "cpu %d\n",
-                                   state->current_cpu);
+				    state->current_cpu);
 
 	} else {
 		if (state->debug_busy) {

@@ -5,14 +5,8 @@ Configuration files can be found in arch/arm64/configs.
 
   diffconfigs for each product:
     Xperia X Performance F8131/F8132 => dora_diffconfig
-    Xperia X Performance SO-04H      => dora_dcm_diffconfig
-    Xperia X Performance SOV33       => dora_kddi_diffconfig
-    Xperia X Performance 502SO       => dora_sbm_diffconfig
     Xperia XZ F8331/F8332            => kagura_diffconfig
-    Xperia XZ SO-01J                 => kagura_dcm_diffconfig
-    Xperia XZ SOV34                  => kagura_kddi_diffconfig
-    Xperia XZ 601SO                  => kagura_sbm_diffconfig
-
+    Xperia XZs G8231/G8232           => keyaki_diffconfig
 
 How to build your kernel:
 

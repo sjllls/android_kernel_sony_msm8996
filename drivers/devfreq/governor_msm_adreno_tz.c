@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2010-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -190,9 +190,21 @@ unsigned long cal_gpu_load(u64 current_time, u64 update_time,
 		tmp_act_total = current_time -
 			gpu_load_infos->gpu_load[tmpIndex].update_time;
 
-		sysfs_busy_perc = (tmp_act_relative_busy * 100) / tmp_act_total;
+		sysfs_busy_perc = (tmp_act_relative_busy * 100 * 10) /
+			tmp_act_total;
 	}
 	return sysfs_busy_perc;
+}
+
+void convert_int_to_string(unsigned long perc, char *str, unsigned int size)
+{
+	char low[6] = "0";
+	char mid[] = ".";
+
+	snprintf(str, sizeof(low), "%lu", (perc / 10));
+	snprintf(low, sizeof(low), "%lu", (perc % 10));
+	strlcat(str, mid, size);
+	strlcat(str, low, size);
 }
 
 static ssize_t gpu_period_load_show(struct device *dev,
@@ -201,7 +213,9 @@ static ssize_t gpu_period_load_show(struct device *dev,
 {
 	unsigned long sysfs_busy_perc[3];
 	int tail, head;
-
+	char load[3][6] = {"0", "0", "0"};
+	int i;
+	unsigned int size;
 	spin_lock(&sample_load_lock);
 	tail = gpu_load_infos->tail;
 	head = gpu_load_infos->head;
@@ -222,12 +236,17 @@ static ssize_t gpu_period_load_show(struct device *dev,
 		sysfs_busy_perc[2] = cal_gpu_load(current_time,
 					update_time, begin_time, 15);
 	}
+	for (i = 0; i < 3; i++) {
+		size = sizeof(load[i]);
+		convert_int_to_string(sysfs_busy_perc[i], load[i], size);
+	}
 
 	spin_unlock(&sample_load_lock);
-	return snprintf(buf, PAGE_SIZE, "%lu %lu %lu\n",
-		sysfs_busy_perc[0],
-		sysfs_busy_perc[1],
-		sysfs_busy_perc[2]);
+	return snprintf(buf, PAGE_SIZE, "%s  %s  %s\n",
+		load[0],
+		load[1],
+		load[2]
+		);
 }
 
 /*
@@ -391,7 +410,7 @@ static int tz_init_ca(struct devfreq_msm_adreno_tz_data *priv)
 {
 	unsigned int tz_ca_data[2];
 	struct scm_desc desc = {0};
-	unsigned int *tz_buf;
+	u8 *tz_buf;
 	int ret;
 
 	/* Set data for TZ */
@@ -438,7 +457,7 @@ static int tz_init(struct devfreq_msm_adreno_tz_data *priv,
 			scm_is_call_available(SCM_SVC_DCVS, TZ_UPDATE_ID_64) &&
 			scm_is_call_available(SCM_SVC_DCVS, TZ_RESET_ID_64)) {
 		struct scm_desc desc = {0};
-		unsigned int *tz_buf;
+		u8 *tz_buf;
 
 		if (!is_scm_armv8()) {
 			ret = scm_call(SCM_SVC_DCVS, TZ_INIT_ID_64,

@@ -91,6 +91,11 @@
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
 
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
+
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
 		somc,qpnp-lab-max-precharge-time = <300>;
@@ -461,6 +466,11 @@
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
 
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
+
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
 		somc,qpnp-lab-max-precharge-time = <300>;
@@ -821,6 +831,11 @@
 		qcom,mdss-dsi-bl-max-level = <4095>;
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
+
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
 
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
@@ -1185,6 +1200,11 @@
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
 
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
+
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
 		somc,qpnp-lab-max-precharge-time = <300>;
@@ -1537,6 +1557,11 @@
 		qcom,mdss-dsi-bl-max-level = <4095>;
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
+
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
 
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
@@ -1894,6 +1919,11 @@
 		qcom,mdss-dsi-bl-max-level = <4095>;
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
+
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
 
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
@@ -2263,6 +2293,11 @@
 		qcom,mdss-dsi-tx-eot-append;
 		qcom,panel-supply-entries = <&dsi_panel_pwr_supply_hybrid_incell>;
 
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
+
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
 		somc,qpnp-lab-max-precharge-time = <300>;
@@ -2370,6 +2405,11 @@
 		qcom,mdss-dsi-bl-max-level = <4095>;
 		qcom,mdss-brightness-max-level = <4095>;
 		qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
+
+		qcom,mdss-dsi-panel-hdr-enabled;
+		qcom,mdss-dsi-panel-hdr-color-primaries = <14940 15790 33800 15700 10950 33800 7450 2300>;
+		qcom,mdss-dsi-panel-peak-brightness = <7000000>;
+		qcom,mdss-dsi-panel-blackness-level = <4646>;
 
 		somc,qpnp-lab-limit-maximum-current = <200>;
 		somc,qpnp-ibb-limit-maximum-current = <800>;
