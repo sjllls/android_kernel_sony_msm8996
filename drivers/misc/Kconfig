@@ -561,14 +561,13 @@ config UID_SYS_STATS
 	  Per UID based io statistics exported to /proc/uid_io
 
 config NFC_PN547
-	tristate "NFC driver for PN547"
+	tristate "NXP PN547 driver"
 	depends on I2C
 	default n
 	help
-	  This option enables device driver for PN547.
-	  GPIO, and PMIC GPIO configurations are controlled.
-	  The sysfs files provides the interface to send and receive
-	  the data, response and notification.
+	  This driver provides support for NFC NXP PN547 devices.
+	  Say Y here to compile support for PN547 devices into the
+	  kernel or say M to compile it as module (pn547).
 
 config NFC_PN553
 	tristate "NFC driver for PN553"
