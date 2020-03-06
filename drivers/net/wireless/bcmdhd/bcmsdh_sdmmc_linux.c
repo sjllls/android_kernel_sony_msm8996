@@ -248,7 +248,7 @@ static int bcmsdh_sdmmc_suspend(struct device *pdev)
 		return err;
 	}
 
-#ifdef CONFIG_ARCH_QCOM
+#ifdef CONFIG_ARCH_MSM
 	/* For QCOM sdhci-msm enable wakeup sdio irq when suspending */
 	err = sdio_set_host_pm_flags(func, MMC_PM_WAKE_SDIO_IRQ);
 	if (err) {
