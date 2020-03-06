@@ -476,7 +476,7 @@ CONFIG_CMDLINE=""
 CONFIG_EFI_STUB=y
 CONFIG_EFI=y
 CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y
-CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES="msm8996-v3.0-tone-keyaki_generic.dts msm8996-v3-tone-keyaki_generic.dts msm8996-v3.0-pmi8996-tone-keyaki_generic msm8996-v3-pmi8996-tone-keyaki_generic"
+CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES="qcom/msm8996-v3.0-tone-keyaki_generic qcom/msm8996-v3-tone-keyaki_generic qcom/msm8996-v3.0-pmi8996-tone-keyaki_generic qcom/msm8996-v3-pmi8996-tone-keyaki_generic"
 CONFIG_BUILD_ARM64_KERNEL_COMPRESSION_GZIP=y
 # CONFIG_BUILD_ARM64_UNCOMPRESSED_KERNEL is not set
 CONFIG_ARCH_HAS_CRASH_NOTES=y
