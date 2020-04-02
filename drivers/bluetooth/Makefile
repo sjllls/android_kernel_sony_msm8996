@@ -15,10 +15,14 @@ obj-$(CONFIG_BT_HCIBTUART)	+= btuart_cs.o
 obj-$(CONFIG_BT_HCIBTUSB)	+= btusb.o
 obj-$(CONFIG_BT_HCIBTSDIO)	+= btsdio.o
 
+obj-$(CONFIG_BT_INTEL)		+= btintel.o
 obj-$(CONFIG_BT_ATH3K)		+= ath3k.o
 obj-$(CONFIG_BT_MRVL)		+= btmrvl.o
 obj-$(CONFIG_BT_MRVL_SDIO)	+= btmrvl_sdio.o
 obj-$(CONFIG_BT_WILINK)		+= btwilink.o
+obj-$(CONFIG_BT_BCM)		+= btbcm.o
+obj-$(CONFIG_BT_RTL)		+= btrtl.o
+obj-$(CONFIG_BT_QCA)		+= btqca.o
 obj-$(CONFIG_MSM_BT_POWER)	+= bluetooth-power.o
 obj-$(CONFIG_BT_BCM43XX)	+= bcm43xx.o
 obj-$(CONFIG_BT_MSM_SLEEP)	+= msm_bt_sleep.o
@@ -37,7 +41,11 @@ hci_uart-$(CONFIG_BT_HCIUART_BCSP)	+= hci_bcsp.o
 hci_uart-$(CONFIG_BT_HCIUART_LL)	+= hci_ll.o
 hci_uart-$(CONFIG_BT_HCIUART_ATH3K)	+= hci_ath.o
 hci_uart-$(CONFIG_BT_HCIUART_3WIRE)	+= hci_h5.o
-hci_uart-$(CONFIG_BT_HCIUART_IBS)	+= hci_ibs.o
+hci_uart-$(CONFIG_BT_HCIUART_INTEL)	+= hci_intel.o
+hci_uart-$(CONFIG_BT_HCIUART_BCM)	+= hci_bcm.o
+hci_uart-$(CONFIG_BT_HCIUART_QCA)	+= hci_qca.o
 hci_uart-objs				:= $(hci_uart-y)
+
+obj-$(CONFIG_BT_BCM_COMBO)		+= broadcom/
 
 ccflags-y += -D__CHECK_ENDIAN__

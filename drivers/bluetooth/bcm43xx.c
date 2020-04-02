@@ -18,13 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  */
-/*
- * Copyright (C) 2014 Sony Mobile Communications Inc.
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2, as
- * published by the Free Software Foundation.
- */
 
 #include <linux/gpio.h>
 #include <linux/init.h>
@@ -34,6 +27,9 @@
 #include <linux/platform_device.h>
 #include <linux/rfkill.h>
 #include <linux/slab.h>
+#ifdef CONFIG_BT_MSM_SLEEP
+#include <net/bluetooth/bluesleep.h>
+#endif
 
 #define D_BCM_BLUETOOTH_CONFIG_MATCH_TABLE   "bcm,bcm43xx"
 
@@ -44,6 +40,7 @@ struct bcm43xx_data {
 	struct pinctrl_state *gpio_state_active;
 	struct pinctrl_state *gpio_state_suspend;
 	unsigned int reg_on_gpio;
+	bool has_pinctl;
 };
 
 static struct bcm43xx_data *bcm43xx_my_data;
@@ -66,6 +63,10 @@ static int bcm43xx_bt_rfkill_set_power(void *data, bool blocked)
 			return 0;
 		}
 		gpio_set_value(bcm43xx_my_data->reg_on_gpio, 1);
+
+#if defined(CONFIG_BT_MSM_SLEEP) && !defined(CONFIG_LINE_DISCIPLINE_DRIVER)
+		bluesleep_start(1);
+#endif
 	} else {
 		if (!regOnGpio) {
 			pr_debug("Bluetooth device is already power off:%d\n",
@@ -73,6 +74,10 @@ static int bcm43xx_bt_rfkill_set_power(void *data, bool blocked)
 			return 0;
 		}
 		gpio_set_value(bcm43xx_my_data->reg_on_gpio, 0);
+
+#if defined(CONFIG_BT_MSM_SLEEP) && !defined(CONFIG_LINE_DISCIPLINE_DRIVER)
+		bluesleep_stop();
+#endif
 	}
 	bt_enabled = !blocked;
 
@@ -94,33 +99,36 @@ static int bcm43xx_bluetooth_dev_init(struct platform_device *pdev,
 		dev_err(&pdev->dev, "%s: pinctrl not defined\n",
 			__func__);
 		ret = PTR_ERR(my_data->pinctrl);
-		goto error_pinctrl;
+	} else {
+		my_data->has_pinctl = true;
 	}
 
-	my_data->gpio_state_active =
-		pinctrl_lookup_state(my_data->pinctrl, PINCTRL_STATE_DEFAULT);
-	if (IS_ERR_OR_NULL(my_data->gpio_state_active)) {
-		dev_err(&pdev->dev, "%s(): pinctrl lookup failed for default\n",
-			__func__);
-		ret = PTR_ERR(my_data->gpio_state_active);
-		goto error_pinctrl;
-	}
+	if (my_data->has_pinctl) {
+		my_data->gpio_state_active =
+			pinctrl_lookup_state(my_data->pinctrl, PINCTRL_STATE_DEFAULT);
+		if (IS_ERR_OR_NULL(my_data->gpio_state_active)) {
+			dev_err(&pdev->dev, "%s(): pinctrl lookup failed for default\n",
+				__func__);
+			ret = PTR_ERR(my_data->gpio_state_active);
+			goto error_pinctrl;
+		}
 
-	my_data->gpio_state_suspend =
-		pinctrl_lookup_state(my_data->pinctrl, PINCTRL_STATE_SLEEP);
-	if (IS_ERR_OR_NULL(my_data->gpio_state_suspend)) {
-		dev_err(&pdev->dev, "%s(): pinctrl lookup failed for sleep\n",
-			__func__);
-		ret = PTR_ERR(my_data->gpio_state_suspend);
-		goto error_pinctrl;
-	}
+		my_data->gpio_state_suspend =
+			pinctrl_lookup_state(my_data->pinctrl, PINCTRL_STATE_SLEEP);
+		if (IS_ERR_OR_NULL(my_data->gpio_state_suspend)) {
+			dev_err(&pdev->dev, "%s(): pinctrl lookup failed for sleep\n",
+				__func__);
+			ret = PTR_ERR(my_data->gpio_state_suspend);
+			goto error_pinctrl;
+		}
 
-	ret = pinctrl_select_state(bcm43xx_my_data->pinctrl,
-		bcm43xx_my_data->gpio_state_active);
-	if (ret) {
-		dev_err(&pdev->dev, "%s(): failed to select active state\n",
-			__func__);
-		goto error_pinctrl;
+		ret = pinctrl_select_state(bcm43xx_my_data->pinctrl,
+			bcm43xx_my_data->gpio_state_active);
+		if (ret) {
+			dev_err(&pdev->dev, "%s(): failed to select active state\n",
+				__func__);
+			goto error_pinctrl;
+		}
 	}
 
 	my_data->reg_on_gpio = of_get_named_gpio(of_node, "bcm,reg-on-gpio", 0);
@@ -134,7 +142,8 @@ static int bcm43xx_bluetooth_dev_init(struct platform_device *pdev,
 	return 0;
 
 error_gpio:
-	pinctrl_select_state(my_data->pinctrl, my_data->gpio_state_suspend);
+	if (my_data->has_pinctl)
+		pinctrl_select_state(my_data->pinctrl, my_data->gpio_state_suspend);
 error_pinctrl:
 	return ret;
 
@@ -190,8 +199,9 @@ static int bcm43xx_bluetooth_probe(struct platform_device *pdev)
 	return 0;
 
 error_free_gpio:
-	pinctrl_select_state(bcm43xx_my_data->pinctrl,
-		bcm43xx_my_data->gpio_state_suspend);
+	if (bcm43xx_my_data->has_pinctl)
+		pinctrl_select_state(bcm43xx_my_data->pinctrl,
+			bcm43xx_my_data->gpio_state_suspend);
 error_dev_init:
 	kzfree(bcm43xx_my_data);
 error_alloc_mydata:
@@ -205,12 +215,13 @@ static int bcm43xx_bluetooth_remove(struct platform_device *pdev)
 	rfkill_unregister(bt_rfkill);
 	rfkill_destroy(bt_rfkill);
 
-	if (!IS_ERR_OR_NULL(bcm43xx_my_data) &&
-			!IS_ERR_OR_NULL(bcm43xx_my_data->pinctrl) &&
-			!IS_ERR_OR_NULL(bcm43xx_my_data->gpio_state_suspend))
-		pinctrl_select_state(
-				bcm43xx_my_data->pinctrl,
-				bcm43xx_my_data->gpio_state_suspend);
+	if (bcm43xx_my_data->has_pinctl)
+		if (!IS_ERR_OR_NULL(bcm43xx_my_data) &&
+				!IS_ERR_OR_NULL(bcm43xx_my_data->pinctrl) &&
+				!IS_ERR_OR_NULL(bcm43xx_my_data->gpio_state_suspend))
+			pinctrl_select_state(
+					bcm43xx_my_data->pinctrl,
+					bcm43xx_my_data->gpio_state_suspend);
 
 	kzfree(bcm43xx_my_data);
 
