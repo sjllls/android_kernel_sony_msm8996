@@ -69,6 +69,8 @@ static const char * const pctl_names[] = {
 
 typedef enum {
 	VCC_SPI = 0,
+	VDD_ANA,
+	VDD_IO,
 	FPC_VREG_MAX,
 } fpc_rails_t;
 
@@ -238,11 +240,11 @@ static int device_prepare(struct fpc1145_data *fpc1145, bool enable)
 		if (rc)
 			goto exit;
 
-		rc = vreg_setup(fpc1145, "vdd_io", true);
+		rc = vreg_setup(fpc1145, VDD_IO, true);
 		if (rc)
 			goto exit_1;
 
-		rc = vreg_setup(fpc1145, "vdd_ana", true);
+		rc = vreg_setup(fpc1145, VDD_ANA, true);
 		if (rc)
 			goto exit_2;
 
@@ -260,9 +262,9 @@ static int device_prepare(struct fpc1145_data *fpc1145, bool enable)
 		usleep_range(PWR_ON_STEP_SLEEP,
 				PWR_ON_STEP_SLEEP + PWR_ON_STEP_RANGE2);
 
-		(void)vreg_setup(fpc1145, "vdd_ana", false);
+		(void)vreg_setup(fpc1145, VDD_ANA, false);
 exit_2:
-		(void)vreg_setup(fpc1145, "vdd_io", false);
+		(void)vreg_setup(fpc1145, VDD_IO, false);
 exit_1:
 		(void)vreg_setup(fpc1145, VCC_SPI, false);
 exit:
@@ -622,9 +624,9 @@ static int fpc1145_remove(struct platform_device *pdev)
 
 	device_init_wakeup(fpc1145->dev, false);
 	mutex_destroy(&fpc1145->lock);
-	(void)vreg_setup(fpc1145, "vdd_io", false);
+	(void)vreg_setup(fpc1145, VDD_IO, false);
 	(void)vreg_setup(fpc1145, VCC_SPI, false);
-	(void)vreg_setup(fpc1145, "vdd_ana", false);
+	(void)vreg_setup(fpc1145, VDD_ANA, false);
 	dev_info(&pdev->dev, "%s\n", __func__);
 	return 0;
 }
