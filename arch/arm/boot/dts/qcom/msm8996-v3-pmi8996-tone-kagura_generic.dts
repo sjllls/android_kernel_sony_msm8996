@@ -27,6 +27,7 @@
 #include "msm8996-tone-kagura-common.dtsi"
 #include "msm8996-tone-kagura_generic.dtsi"
 #include "dsi-panel-kagura.dtsi"
+#include "msm8996-tone-kagura-camera.dtsi"
 
 / {
 	model = "SoMC Kagura-ROW";

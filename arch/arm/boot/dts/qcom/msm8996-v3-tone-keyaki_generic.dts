@@ -26,6 +26,7 @@
 #include "msm8996-tone-keyaki-common.dtsi"
 #include "msm8996-tone-keyaki_generic.dtsi"
 #include "dsi-panel-kagura.dtsi"
+#include "msm8996-tone-keyaki-camera.dtsi"
 
 / {
 	model = "SoMC Keyaki-ROW";
