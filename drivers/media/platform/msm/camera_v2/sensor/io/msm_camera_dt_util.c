@@ -9,11 +9,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
-/*
- * NOTE: This file has been modified by Sony Mobile Communications Inc.
- * Modifications are Copyright (c) 2015 Sony Mobile Communications Inc,
- * and licensed under the license of the file.
- */
 
 #include "msm_camera_dt_util.h"
 #include "msm_camera_io_util.h"
@@ -786,8 +781,6 @@ ERROR1:
 	gconf->cam_gpio_req_tbl_size = 0;
 	return rc;
 }
-
-#if defined(CONFIG_SONY_CAM_V4L2)
 int msm_camera_get_dt_gpio_set_tbl(struct device_node *of_node,
 	struct msm_camera_gpio_conf *gconf, uint16_t *gpio_array,
 	uint16_t gpio_array_size)
@@ -805,16 +798,13 @@ int msm_camera_get_dt_gpio_set_tbl(struct device_node *of_node,
 		return 0;
 	}
 
-	val_array = kzalloc(sizeof(uint32_t) * count, GFP_KERNEL);
-	if (!val_array) {
-		pr_err("%s failed %d\n", __func__, __LINE__);
+	val_array = kzalloc((sizeof(uint32_t) * count), GFP_KERNEL);
+	if (!val_array)
 		return -ENOMEM;
-	}
 
 	gconf->cam_gpio_set_tbl = kzalloc(sizeof(struct msm_gpio_set_tbl) *
 		count, GFP_KERNEL);
 	if (!gconf->cam_gpio_set_tbl) {
-		pr_err("%s failed %d\n", __func__, __LINE__);
 		rc = -ENOMEM;
 		goto ERROR1;
 	}
@@ -871,7 +861,6 @@ ERROR1:
 	gconf->cam_gpio_set_tbl_size = 0;
 	return rc;
 }
-#endif
 
 int msm_camera_init_gpio_pin_tbl(struct device_node *of_node,
 	struct msm_camera_gpio_conf *gconf, uint16_t *gpio_array,
