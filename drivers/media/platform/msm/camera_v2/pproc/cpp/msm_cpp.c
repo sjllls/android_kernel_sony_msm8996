@@ -4157,7 +4157,6 @@ static  int msm_cpp_update_gdscrv2_status(struct cpp_device *cpp_dev,
 {
 	int rc = 0;
 	int value = 0;
-	uint32_t msm_cpp_reg_idx;
 
 	if (!cpp_dev) {
 		pr_err("%s: cpp device invalid\n", __func__);
