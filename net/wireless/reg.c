@@ -1154,7 +1154,7 @@ static void chan_reg_rule_print_dbg(const struct ieee80211_regdomain *regd,
 			 power_rule->max_antenna_gain);
 
 	if (reg_rule->flags & NL80211_RRF_AUTO_BW)
-		snprintf(bw, sizeof(bw), "%d KHz, %d KHz AUTO",
+		snprintf(bw, sizeof(bw), "%d KHz, %u KHz AUTO",
 			 freq_range->max_bandwidth_khz,
 			 reg_get_max_bandwidth(regd, reg_rule));
 	else
@@ -2421,6 +2421,9 @@ int regulatory_hint_user(const char *alpha2,
 	struct regulatory_request *request;
 
 	if (WARN_ON(!alpha2))
+		return -EINVAL;
+
+	if (!is_world_regdom(alpha2) && !is_an_alpha2(alpha2))
 		return -EINVAL;
 
 	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);

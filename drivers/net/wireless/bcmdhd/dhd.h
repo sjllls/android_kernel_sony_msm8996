@@ -167,7 +167,11 @@ enum dhd_op_flags {
 #endif /* MAX_CNTL_RX_TIMEOUT */
 
 #define DHD_SCAN_ASSOC_ACTIVE_TIME	40 /* ms: Embedded default Active setting from DHD */
+#ifndef CUSTOM_SCAN_UNASSOC_ACTIVE_TIME
 #define DHD_SCAN_UNASSOC_ACTIVE_TIME 80 /* ms: Embedded def. Unassoc Active setting from DHD */
+#else
+#define DHD_SCAN_UNASSOC_ACTIVE_TIME	CUSTOM_SCAN_UNASSOC_ACTIVE_TIME
+#endif /* CUSTOM_SCAN_UNASSOC_ACTIVE_TIME */
 #define DHD_SCAN_PASSIVE_TIME		130 /* ms: Embedded default Passive setting from DHD */
 
 #ifndef POWERUP_MAX_RETRY
@@ -1321,7 +1325,8 @@ extern int dhd_os_busbusy_wait_negation(dhd_pub_t * pub, uint * condition);
 extern int dhd_os_busbusy_wake(dhd_pub_t * pub);
 
 extern bool dhd_is_concurrent_mode(dhd_pub_t *dhd);
-extern int dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *cmd_buf, uint cmd_len, int set);
+int dhd_iovar(dhd_pub_t *pub, int ifidx, char *name, char *param_buf, uint param_len,
+		char *res_buf, uint res_len, int set);
 extern int dhd_getiovar(dhd_pub_t *pub, int ifidx, char *name, char *cmd_buf,
 		uint cmd_len, char **resptr, uint resp_len);
 

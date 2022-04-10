@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -274,6 +274,7 @@ struct fastrpc_apps {
 	struct ion_client *client;
 	struct device *dev;
 	bool glink;
+ 	bool secure_flag;
 	spinlock_t ctxlock;
 	struct smq_invoke_ctx *ctxtable[FASTRPC_CTX_MAX];
 };
@@ -297,8 +298,7 @@ struct fastrpc_mmap {
 	int uncached;
 	int secure;
 	uintptr_t attr;
-	bool is_filemap;
-	/*flag to indicate map used in process init*/
+ 	bool is_filemap; /*flag to indicate map used in process init*/
 };
 
 struct fastrpc_perf {
@@ -558,9 +558,9 @@ static int fastrpc_mmap_remove(struct fastrpc_file *fl, uintptr_t va,
 
 	spin_lock(&me->hlock);
 	hlist_for_each_entry_safe(map, n, &me->maps, hn) {
-		if (map->refs == 1 && map->raddr == va &&
+ 		if (map->refs == 1 && map->raddr == va &&
 			map->raddr + map->len == va + len &&
-			/*Remove map if not used in process initialization*/
+	/*Remove map if not used in process initialization*/
 			!map->is_filemap) {
 			match = map;
 			hlist_del_init(&map->hn);
@@ -574,9 +574,9 @@ static int fastrpc_mmap_remove(struct fastrpc_file *fl, uintptr_t va,
 	}
 	spin_lock(&fl->hlock);
 	hlist_for_each_entry_safe(map, n, &fl->maps, hn) {
-		if (map->refs == 1 && map->raddr == va &&
+ 		if (map->refs == 1 && map->raddr == va &&
 			map->raddr + map->len == va + len &&
-			/*Remove map if not used in process initialization*/
+	/*Remove map if not used in process initialization*/
 			!map->is_filemap) {
 			match = map;
 			hlist_del_init(&map->hn);
@@ -715,7 +715,7 @@ static int fastrpc_mmap_create(struct fastrpc_file *fl, int fd, unsigned attr,
 	map->fl = fl;
 	map->fd = fd;
 	map->attr = attr;
-	map->is_filemap = false;
+ 	map->is_filemap = false;
 	if (mflags == ADSP_MMAP_HEAP_ADDR ||
 				mflags == ADSP_MMAP_REMOTE_HEAP_ADDR) {
 		DEFINE_DMA_ATTRS(rh_attrs);
@@ -2337,11 +2337,13 @@ static int fastrpc_internal_munmap(struct fastrpc_file *fl,
 	VERIFY(err, !fastrpc_mmap_remove(fl, ud->vaddrout, ud->size, &map));
 	if (err)
 		goto bail;
-	VERIFY(err, !fastrpc_munmap_on_dsp(fl, map->raddr,
-				map->phys, map->size, map->flags));
-	if (err)
-		goto bail;
-	fastrpc_mmap_free(map);
+	if (map) {
+		VERIFY(err, !fastrpc_munmap_on_dsp(fl, map->raddr,
+					map->phys, map->size, map->flags));
+		if (err)
+			goto bail;
+		fastrpc_mmap_free(map);
+	}
 bail:
 	if (err && map)
 		fastrpc_mmap_add(map);
@@ -3101,7 +3103,8 @@ static int fastrpc_get_info(struct fastrpc_file *fl, uint32_t *info)
 		if (err)
 			goto bail;
 		/* Check to see if the device node is non-secure */
-		if (fl->dev_minor == MINOR_NUM_DEV) {
+		if (fl->dev_minor == MINOR_NUM_DEV &&
+			fl->apps->secure_flag == true) {
 			/*
 			 * For non secure device node check and make sure that
 			 * the channel allows non-secure access
@@ -3669,10 +3672,13 @@ static int fastrpc_probe(struct platform_device *pdev)
 		VERIFY(err, !of_property_read_u32(dev->of_node,
 				  "qcom,secure-domains",
 				  &secure_domains));
-		if (!err)
+		if (!err) {
+			me->secure_flag = true;
 			configure_secure_channels(secure_domains);
-		else
+		} else {
+			me->secure_flag = false;
 			pr_info("adsprpc: unable to read the domain configuration from dts\n");
+		}
 	}
 	if (of_device_is_compatible(dev->of_node,
 					"qcom,msm-fastrpc-compute-cb"))
@@ -3760,6 +3766,7 @@ static int __init fastrpc_device_init(void)
 	memset(me, 0, sizeof(*me));
 	fastrpc_init(me);
 	me->dev = NULL;
+ 	me->secure_flag = false;
 	VERIFY(err, 0 == platform_driver_register(&fastrpc_driver));
 	if (err)
 		goto register_bail;

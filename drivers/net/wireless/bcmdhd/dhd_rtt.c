@@ -820,7 +820,7 @@ dhd_rtt_common_set_handler(dhd_pub_t *dhd, const ftm_subcmd_info_t *p_subcmd_inf
 		return BCME_NOMEM;
 
 	/* no TLV to pack, simply issue a set-proxd iovar */
-	ret = dhd_iovar(dhd, 0, "proxd", (void *) p_proxd_iov, proxd_iovsize, 1);
+	ret = dhd_iovar(dhd, 0, "proxd", (char *)p_proxd_iov, proxd_iovsize, NULL, 0, TRUE);
 #ifdef RTT_DEBUG
 	if (ret != BCME_OK) {
 		DHD_ERROR(("error: Proxd IOVAR failed, status=%d\n", ret));
@@ -1069,7 +1069,7 @@ dhd_rtt_ftm_config(dhd_pub_t *dhd, wl_proxd_session_id_t session_id,
 		all_tlvsize = (bufsize - buf_space_left);
 		p_proxd_iov->len = htol16(all_tlvsize + WL_PROXD_IOV_HDR_SIZE);
 		ret = dhd_iovar(dhd, 0, "proxd", (char *)p_proxd_iov,
-			all_tlvsize + WL_PROXD_IOV_HDR_SIZE, 1);
+				all_tlvsize + WL_PROXD_IOV_HDR_SIZE, NULL, 0, TRUE);
 		if (ret != BCME_OK) {
 			DHD_ERROR(("%s : failed to set config \n", __FUNCTION__));
 		}
@@ -1262,7 +1262,7 @@ dhd_rtt_start(dhd_pub_t *dhd)
 	}
 	/* turn off mpc in case of non-associted */
 	if (!dhd_is_associated(dhd, NULL, NULL)) {
-		err = dhd_iovar(dhd, 0, "mpc", (char *)&mpc, sizeof(mpc), 1);
+		err = dhd_iovar(dhd, 0, "mpc", (char *)&mpc, sizeof(mpc), NULL, 0, TRUE);
 		if (err) {
 			DHD_ERROR(("%s : failed to set mpc\n", __FUNCTION__));
 			goto exit;
@@ -1350,7 +1350,7 @@ dhd_rtt_start(dhd_pub_t *dhd)
 	/* burst-duration */
 	if (rtt_target->burst_duration) {
 		ftm_params[ftm_param_cnt].data_intvl.intvl =
-			htol32(rtt_target->burst_period); /* ms */
+			htol32(rtt_target->burst_duration); /* ms */
 		ftm_params[ftm_param_cnt].data_intvl.tmu = WL_PROXD_TMU_MILLI_SEC;
 		ftm_params[ftm_param_cnt++].tlvid = WL_PROXD_TLV_ID_BURST_DURATION;
 		DHD_ERROR((">\t burst duration : %d ms\n",
@@ -1419,7 +1419,7 @@ exit:
 			/* enable mpc again in case of error */
 			mpc = 1;
 			rtt_status->mpc = 0;
-			err = dhd_iovar(dhd, 0, "mpc", (char *)&mpc, sizeof(mpc), 1);
+			err = dhd_iovar(dhd, 0, "mpc", (char *)&mpc, sizeof(mpc), NULL, 0, TRUE);
 		}
 	}
 	return err;
@@ -1593,7 +1593,7 @@ dhd_rtt_convert_results_to_host(rtt_report_t *rtt_report, uint8 *p_data, uint16 
 	rtt_report->status = ftm_get_statusmap_info(proxd_status,
 			&ftm_status_map_info[0], ARRAYSIZE(ftm_status_map_info));
 	/* rssi (0.5db) */
-	rtt_report->rssi = (int16)ltoh16_ua(&p_data_info->avg_rtt.rssi) * 2;
+	rtt_report->rssi = ABS((int16) ltoh16_ua(&p_data_info->avg_rtt.rssi)) * 2;
 	/* rx rate */
 	ratespec = ltoh32_ua(&p_data_info->avg_rtt.ratespec);
 	rtt_report->rx_rate = dhd_rtt_convert_rate_to_host(ratespec);
@@ -1606,14 +1606,14 @@ dhd_rtt_convert_results_to_host(rtt_report_t *rtt_report, uint8 *p_data, uint16 
 	/* rtt_sd */
 	rtt.tmu = ltoh16_ua(&p_data_info->avg_rtt.rtt.tmu);
 	rtt.intvl = ltoh32_ua(&p_data_info->avg_rtt.rtt.intvl);
-	rtt_report->rtt = FTM_INTVL2NSEC(&rtt) * 10; /* nano -> 0.1 nano */
+	rtt_report->rtt = FTM_INTVL2NSEC(&rtt) * 1000; /* nano -> pico seconds */
 	rtt_report->rtt_sd = ltoh16_ua(&p_data_info->sd_rtt); /* nano -> 0.1 nano */
 	DHD_RTT(("rtt_report->rtt : %llu\n", rtt_report->rtt));
 	DHD_RTT(("rtt_report->rssi : %d (0.5db)\n", rtt_report->rssi));
 
 	/* average distance */
 	if (avg_dist != FTM_INVALID) {
-		rtt_report->distance = (avg_dist >> 8) * 100; /* meter -> cm */
+		rtt_report->distance = (avg_dist >> 8) * 1000; /* meter -> mm */
 		rtt_report->distance += (avg_dist & 0xff) * 100 / 256;
 	} else {
 		rtt_report->distance = FTM_INVALID;

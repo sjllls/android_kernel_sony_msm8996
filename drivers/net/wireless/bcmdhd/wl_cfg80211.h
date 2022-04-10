@@ -70,7 +70,7 @@ struct wl_ibss;
 /* 0 invalidates all debug messages.  default is 1 */
 #define WL_DBG_LEVEL 0xFF
 
-#define CFG80211_ERROR_TEXT		"CFG80211-ERROR) "
+#define CFG80211_ERROR_TEXT		""
 
 #if defined(DHD_DEBUG)
 #define	WL_ERR(args)									\
@@ -405,12 +405,12 @@ struct net_info {
 };
 
 /* association inform */
-#define MAX_REQ_LINE 1024
+#define MAX_REQ_LINE 1024u
 struct wl_connect_info {
 	u8 req_ie[MAX_REQ_LINE];
-	s32 req_ie_len;
+	u32 req_ie_len;
 	u8 resp_ie[MAX_REQ_LINE];
-	s32 resp_ie_len;
+	u32 resp_ie_len;
 };
 
 /* firmware /nvram downloading controller */

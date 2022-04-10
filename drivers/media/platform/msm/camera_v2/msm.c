@@ -227,7 +227,6 @@ static inline void msm_pm_qos_add_request(void)
 	pm_qos_add_request(&msm_v4l2_pm_qos_request, PM_QOS_CPU_DMA_LATENCY,
 	PM_QOS_DEFAULT_VALUE);
 }
-
 static void msm_pm_qos_remove_request(void)
 {
 	pr_info("%s: remove request", __func__);
@@ -1352,8 +1351,8 @@ static int msm_probe(struct platform_device *pdev)
 	if (WARN_ON(rc < 0))
 		goto media_fail;
 
-	if (WARN_ON((rc == media_entity_init(&pvdev->vdev->entity,
-			0, NULL, 0)) < 0))
+	if (WARN_ON(rc != media_entity_init(&pvdev->vdev->entity,
+			0, NULL, 0)))
 		goto entity_fail;
 
 	pvdev->vdev->entity.type = MEDIA_ENT_T_DEVNODE_V4L;

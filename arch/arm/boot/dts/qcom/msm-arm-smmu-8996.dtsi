@@ -16,6 +16,7 @@
 
 &anoc0_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -37,6 +38,7 @@
 
 &anoc1_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -53,6 +55,7 @@
 
 &anoc2_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -73,6 +76,7 @@
 
 &lpass_q6_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -97,6 +101,7 @@
 
 &jpeg_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	qcom,fatal-asf;
@@ -125,6 +130,7 @@
 
 &vfe_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	qcom,fatal-asf;
@@ -152,6 +158,7 @@
 
 &cpp_fd_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	qcom,fatal-asf;
@@ -180,6 +187,7 @@
 
 &venus_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -211,6 +219,7 @@
 
 &mdp_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	qcom,no-smr-check;
@@ -238,6 +247,7 @@
 
 &rot_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	#global-interrupts = <1>;
@@ -264,6 +274,7 @@
 
 &kgsl_smmu {
 	status = "ok";
+	qcom,use-3-lvl-tables;
 	qcom,register-save;
 	qcom,skip-init;
 	qcom,dynamic;

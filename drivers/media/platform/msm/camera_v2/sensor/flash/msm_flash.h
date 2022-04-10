@@ -82,14 +82,14 @@ struct msm_flash_ctrl_t {
 	uint32_t flash_op_current[MAX_LED_TRIGGERS];
 	uint32_t flash_max_current[MAX_LED_TRIGGERS];
 	uint32_t flash_max_duration[MAX_LED_TRIGGERS];
-
+	struct led_classdev flash_cdev;
 	/* Torch */
 	uint32_t torch_num_sources;
 	const char *torch_trigger_name[MAX_LED_TRIGGERS];
 	struct led_trigger *torch_trigger[MAX_LED_TRIGGERS];
 	uint32_t torch_op_current[MAX_LED_TRIGGERS];
 	uint32_t torch_max_current[MAX_LED_TRIGGERS];
-
+	struct led_classdev torch_cdev;
 	void *data;
 	enum msm_camera_device_type_t flash_device_type;
 	enum cci_i2c_master_t cci_i2c_master;
