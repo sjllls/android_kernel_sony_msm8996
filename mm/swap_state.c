@@ -19,6 +19,7 @@
 #include <linux/migrate.h>
 
 #include <asm/pgtable.h>
+#include "internal.h"
 
 /*
  * swapper_space is a fiction, retained to simplify the path through
@@ -321,7 +322,7 @@ struct page *__read_swap_cache_async(swp_entry_t entry, gfp_t gfp_mask,
 		/*
 		 * call radix_tree_preload() while we can wait.
 		 */
-		err = radix_tree_maybe_preload(gfp_mask & GFP_KERNEL);
+		err = radix_tree_maybe_preload(gfp_mask & GFP_RECLAIM_MASK);
 		if (err)
 			break;
 
@@ -476,6 +477,11 @@ struct page *swapin_readahead(swp_entry_t entry, gfp_t gfp_mask,
 
 	mask = is_swap_fast(entry) ? 0 : swapin_nr_pages(offset) - 1;
 	if (!mask)
+		goto skip;
+
+
+	/* If exiting, don't do swap readahead. */
+	if (current->flags & PF_EXITING)
 		goto skip;
 
 	/* Read a page_cluster sized and aligned cluster around offset. */

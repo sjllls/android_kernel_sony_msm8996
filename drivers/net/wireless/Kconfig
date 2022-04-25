@@ -326,6 +326,12 @@ config CNSS_QCA6290
 	  These changes are needed to support the new hardware architecture
 	  for CNSS QCA6290 chipset.
 
+config SOMC_WIFI_CONTROL
+	bool "Enable/disable SOMC WiFi control function"
+	depends on PCI
+	---help---
+	  A SOMC adaptation for the WLAN driver module
+
 source "drivers/net/wireless/ath/Kconfig"
 source "drivers/net/wireless/b43/Kconfig"
 source "drivers/net/wireless/b43legacy/Kconfig"

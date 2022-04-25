@@ -650,7 +650,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
 	dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
 	if (dev->current_state != state && printk_ratelimit())
-		dev_info(&dev->dev, "Refused to change power state, currently in D%d\n",
+		dev_dbg(&dev->dev, "Refused to change power state, currently in D%d\n",
 			 dev->current_state);
 
 	/*
@@ -1876,7 +1876,14 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
 	if (enable) {
 		int error;
 
-		if (pci_pme_capable(dev, state))
+		/*
+		 * Enable PME signaling if the device can signal PME from
+		 * D3cold regardless of whether or not it can signal PME from
+		 * the current target state, because that will allow it to
+		 * signal PME when the hierarchy above it goes into D3cold and
+		 * the device itself ends up in D3cold as a result of that.
+		 */
+		if (pci_pme_capable(dev, state) || pci_pme_capable(dev, PCI_D3cold))
 			pci_pme_active(dev, true);
 		else
 			ret = 1;

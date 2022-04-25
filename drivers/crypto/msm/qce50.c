@@ -1,6 +1,6 @@
 /* Qualcomm Crypto Engine driver.
  *
- * Copyright (c) 2012-2018, 2020-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2018, 2020 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -42,7 +42,7 @@
 #define MAX_SPS_DESC_FIFO_SIZE 0xfff0
 #define QCE_MAX_NUM_DSCR    0x200
 #define QCE_SECTOR_SIZE	    0x200
-#define CE_CLK_100MHZ	100000000
+#define CE_CLK_160MHZ	160000000
 #define CE_CLK_DIV	1000000
 
 #define CRYPTO_CORE_MAJOR_VER_NUM 0x05
@@ -866,11 +866,6 @@ static int _ce_setup_cipher(struct qce_device *pce_dev, struct qce_req *creq,
 		break;
 	case CIPHER_ALG_3DES:
 		if (creq->mode !=  QCE_MODE_ECB) {
-			if (ivsize > MAX_IV_LENGTH) {
-				pr_err("%s: error: Invalid length parameter\n",
-					 __func__);
-				return -EINVAL;
-			}
 			_byte_stream_to_net_words(enciv32, creq->iv, ivsize);
 			pce = cmdlistinfo->encr_cntr_iv;
 			pce->data = enciv32[0];
@@ -919,11 +914,6 @@ static int _ce_setup_cipher(struct qce_device *pce_dev, struct qce_req *creq,
 			}
 		}
 		if (creq->mode !=  QCE_MODE_ECB) {
-			if (ivsize > MAX_IV_LENGTH) {
-				pr_err("%s: error: Invalid length parameter\n",
-					 __func__);
-				return -EINVAL;
-			}
 			if (creq->mode ==  QCE_MODE_XTS)
 				_byte_stream_swap_to_net_words(enciv32,
 							creq->iv, ivsize);
@@ -4693,7 +4683,7 @@ again:
 			pce_dev->intr_cadence = 0;
 			atomic_set(&pce_dev->bunch_cmd_seq, 0);
 			atomic_set(&pce_dev->last_intr_seq, 0);
-			pce_dev->cadence_flag = ~pce_dev->cadence_flag;
+			pce_dev->cadence_flag = !pce_dev->cadence_flag;
 		}
 	}
 
@@ -5733,7 +5723,7 @@ static int __qce_get_device_tree_data(struct platform_device *pdev,
 				"qcom,ce-opp-freq",
 				&pce_dev->ce_opp_freq_hz)) {
 		pr_info("CE operating frequency is not defined, setting to default 100MHZ\n");
-		pce_dev->ce_opp_freq_hz = CE_CLK_100MHZ;
+		pce_dev->ce_opp_freq_hz = CE_CLK_160MHZ;
 	}
 	pce_dev->ce_bam_info.dest_pipe_index	=
 			2 * pce_dev->ce_bam_info.pipe_pair_index;

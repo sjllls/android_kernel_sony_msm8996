@@ -233,7 +233,7 @@ static inline struct v4l2_subdev *msm_cci_get_subdev(void)
 }
 #endif
 
-#define VIDIOC_MSM_CCI_CFG \
-	_IOWR('V', BASE_VIDIOC_PRIVATE + 23, struct msm_camera_cci_ctrl *)
+#define VIDIOC_MSM_CCI_CFG 							\
+	_IOWR('V', BASE_VIDIOC_PRIVATE + 23, struct msm_camera_cci_ctrl)
 
 #endif

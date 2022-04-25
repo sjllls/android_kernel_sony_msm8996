@@ -223,11 +223,17 @@ int wifi_platform_get_mac_addr(wifi_adapter_info_t *adapter, unsigned char *buf)
 	if (plat_data->get_mac_addr) {
 		return plat_data->get_mac_addr(buf);
 	}
+#ifdef GET_CUSTOM_MAC_ENABLE
+	return somc_get_mac_address(buf);
+#else
 	return -EOPNOTSUPP;
+#endif
 }
-
-void *wifi_platform_get_country_code(wifi_adapter_info_t *adapter, char *ccode,
-				     u32 flags)
+#ifdef CUSTOM_COUNTRY_CODE
+void *wifi_platform_get_country_code(wifi_adapter_info_t *adapter, char *ccode, u32 flags)
+#else
+void *wifi_platform_get_country_code(wifi_adapter_info_t *adapter, char *ccode)
+#endif /* CUSTOM_COUNTRY_CODE */
 {
 	/* get_country_code was added after 2.6.39 */
 #if	(LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 39))

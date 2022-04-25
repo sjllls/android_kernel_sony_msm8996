@@ -98,6 +98,38 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/sched.h>
 
+static atomic_t __su_instances;
+
+int su_instances(void)
+{
+	return atomic_read(&__su_instances);
+}
+
+bool su_running(void)
+{
+	return su_instances() > 0;
+}
+
+bool su_visible(void)
+{
+	kuid_t uid = current_uid();
+	if (su_running())
+		return true;
+	if (uid_eq(uid, GLOBAL_ROOT_UID) || uid_eq(uid, GLOBAL_SYSTEM_UID))
+		return true;
+	return false;
+}
+
+void su_exec(void)
+{
+	atomic_inc(&__su_instances);
+}
+
+void su_exit(void)
+{
+	atomic_dec(&__su_instances);
+}
+
 ATOMIC_NOTIFIER_HEAD(load_alert_notifier_head);
 
 DEFINE_MUTEX(sched_domains_mutex);
@@ -944,7 +976,7 @@ static void update_rq_clock_task(struct rq *rq, s64 delta)
 	rq->clock_task += delta;
 
 #if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
-	if ((irq_delta + steal) && sched_feat(NONTASK_CAPACITY))
+	if ((irq_delta + steal) && !!sched_feat(NONTASK_CAPACITY))
 		sched_rt_avg_update(rq, irq_delta + steal);
 #endif
 }
@@ -1989,6 +2021,10 @@ out:
 
 bool cpus_share_cache(int this_cpu, int that_cpu)
 {
+
+	if (this_cpu == that_cpu)
+		return true;
+
 	return per_cpu(sd_llc_id, this_cpu) == per_cpu(sd_llc_id, that_cpu);
 }
 #endif /* CONFIG_SMP */

@@ -141,6 +141,10 @@
 	qcom,gpu-quirk-critical-packets;
 	qcom,gpu-quirk-fault-detect-mask;
 
+	/* Disable wake on touch */
+	qcom,disable-wake-on-touch;
+
+	qcom,disable-busy-time-burst;
 	qcom,gpu-pwrlevel-bins {
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -941,6 +945,7 @@
 	};
 	qcom,msm-thermal {
 		msm_thermal_freq: qcom,vdd-apps-rstr{
+			qcom,max-freq-level = <1190400>;
 			qcom,levels = <1036800 1555200 1555200>;
 		};
 		qcom,vdd-gfx-rstr{

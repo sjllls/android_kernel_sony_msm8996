@@ -1,0 +1,40 @@
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		new_cci_dev->cci_master_info[i].status = 0;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		mutex_init(&new_cci_dev->cci_master_info[i].mutex);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		init_completion(&new_cci_dev->
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:			mutex_init(&new_cci_dev->cci_master_info[i].mutex_q[j]);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:			init_completion(&new_cci_dev->
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:			spin_lock_init(&new_cci_dev->
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	v4l2_subdev_init(&new_cci_dev->msm_sd.sd, &msm_cci_subdev_ops);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->msm_sd.sd.internal_ops = &msm_cci_internal_ops;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	snprintf(new_cci_dev->msm_sd.sd.name,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:			ARRAY_SIZE(new_cci_dev->msm_sd.sd.name), "msm_cci");
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	v4l2_set_subdevdata(&new_cci_dev->msm_sd.sd, new_cci_dev);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	platform_set_drvdata(pdev, &new_cci_dev->msm_sd.sd);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	CDBG("%s sd %pK\n", __func__, &new_cci_dev->msm_sd.sd);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		&new_cci_dev->cci_clk_info, &new_cci_dev->cci_clk,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		&new_cci_dev->cci_clk_rates, &new_cci_dev->num_clk_cases,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		&new_cci_dev->num_clk);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->ref_count = 0;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->base = msm_camera_get_reg_base(pdev, "cci", true);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	if (!new_cci_dev->base) {
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->irq = msm_camera_get_irq(pdev, "cci");
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	if (!new_cci_dev->irq) {
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		(int) new_cci_dev->irq->start,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		(int) new_cci_dev->irq->end);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	rc = msm_camera_register_irq(pdev, new_cci_dev->irq,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	msm_camera_enable_irq(new_cci_dev->irq, false);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->msm_sd.close_seq = MSM_SD_CLOSE_2ND_CATEGORY | 0x6;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	msm_sd_register(&new_cci_dev->msm_sd);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->pdev = pdev;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	rc = msm_camera_get_dt_vreg_data(new_cci_dev->pdev->dev.of_node,
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		&(new_cci_dev->cci_vreg), &(new_cci_dev->regulator_count));
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	if ((new_cci_dev->regulator_count < 0) ||
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		(new_cci_dev->regulator_count > MAX_REGULATOR)) {
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:			new_cci_dev->regulator_count, MAX_REGULATOR);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	new_cci_dev->cci_state = CCI_STATE_DISABLED;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	g_cci_subdev = &new_cci_dev->msm_sd.sd;
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		new_cci_dev->write_wq[i] = create_singlethread_workqueue(
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:		if (!new_cci_dev->write_wq[i])
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	CDBG("%s cci subdev %pK\n", __func__, &new_cci_dev->msm_sd.sd);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	kfree(new_cci_dev->cci_vreg);
+drivers/media/platform/msm/camera_v2/sensor/cci/msm_cci.c:	msm_camera_put_reg_base(pdev, new_cci_dev->base, "cci", true);

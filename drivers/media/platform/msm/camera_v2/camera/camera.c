@@ -93,6 +93,13 @@ static int camera_v4l2_querycap(struct file *filep, void *fh,
 	int rc;
 	struct v4l2_event event;
 
+	cap->bus_info[0] = 0;
+	strlcpy(cap->driver, "msm-sensor", sizeof(cap->driver));
+	strlcpy(cap->card, "msm-sensor", sizeof(cap->card));
+	cap->device_caps = V4L2_CAP_VIDEO_OUTPUT |
+		V4L2_CAP_STREAMING;
+	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
+
 	if (msm_is_daemon_present() == false)
 		return 0;
 
@@ -720,6 +727,7 @@ post_fail:
 command_ack_q_fail:
 	msm_destroy_session(pvdev->vdev->num);
 session_fail:
+	msm_pm_qos_update_request(CAMERA_ENABLE_PC_LATENCY);
 	pm_relax(&pvdev->vdev->dev);
 stream_fail:
 	camera_v4l2_vb2_q_release(filep);

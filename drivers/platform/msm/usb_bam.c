@@ -30,7 +30,7 @@
 
 #define USB_THRESHOLD 512
 #define USB_BAM_MAX_STR_LEN 50
-#define USB_BAM_TIMEOUT (10*HZ)
+#define USB_BAM_TIMEOUT 10000
 #define DBG_MAX_MSG   512UL
 #define DBG_MSG_LEN   160UL
 #define TIME_BUF_LEN  17
@@ -1268,7 +1268,7 @@ static inline int all_pipes_suspended(enum usb_ctrl cur_bam)
 	return info[cur_bam].pipes_suspended == ctx->pipes_enabled_per_bam;
 }
 
-static void usb_bam_finish_suspend(enum usb_ctrl cur_bam)
+static void usb_bam_finish_suspend(int cur_bam)
 {
 	int ret, bam2bam;
 	u32 cons_empty, idx, dst_idx;
@@ -1395,7 +1395,7 @@ no_lpm:
 
 void usb_bam_finish_suspend_(struct work_struct *w)
 {
-	enum usb_ctrl cur_bam;
+	int cur_bam;
 	struct usb_bam_ipa_handshake_info *info_ptr;
 
 	info_ptr = container_of(w, struct usb_bam_ipa_handshake_info,
@@ -1664,7 +1664,7 @@ static void wait_for_prod_granted(enum usb_ctrl cur_bam)
 	} else if (ret == -EINPROGRESS) {
 		log_event_dbg("%s: Waiting for PROD_GRANTED\n", __func__);
 		if (!wait_for_completion_timeout(&info[cur_bam].prod_avail,
-			USB_BAM_TIMEOUT))
+			msecs_to_jiffies(USB_BAM_TIMEOUT)))
 			log_event_err("%s: Timeout wainting for PROD_GRANTED\n",
 				__func__);
 	} else
@@ -1709,7 +1709,7 @@ static void wait_for_prod_release(enum usb_ctrl cur_bam)
 	} else if (ret == -EINPROGRESS) {
 		log_event_dbg("%s: Waiting for PROD_RELEASED\n", __func__);
 		if (!wait_for_completion_timeout(&info[cur_bam].prod_released,
-						USB_BAM_TIMEOUT))
+						msecs_to_jiffies(USB_BAM_TIMEOUT)))
 			log_event_err("%s: Timeout waiting for PROD_RELEASED\n",
 			__func__);
 	} else {
